@@ -1,0 +1,29 @@
+{
+  "name": "obsidian-read-later",
+  "version": "1.0.0",
+  "description": "使用 LLM 总结网页内容并保存到 Obsidian 的浏览器插件",
+  "scripts": {
+    "download-readability": "curl -o libs/Readability.js https://raw.githubusercontent.com/mozilla/readability/main/Readability.js",
+    "download-marked": "curl -o libs/marked.min.js https://cdn.jsdelivr.net/npm/marked/marked.min.js",
+    "download-libs": "npm run download-readability && npm run download-marked",
+    "test": "jest",
+    "lint": "eslint ."
+  },
+  "keywords": [
+    "obsidian",
+    "read-later",
+    "llm",
+    "browser-extension",
+    "chrome-extension",
+    "markdown"
+  ],
+  "author": "fuwei <buffuwei@gmail.com>",
+  "license": "MIT",
+  "devDependencies": {
+    "jest": "^29.7.0",
+    "jest-environment-jsdom": "^30.2.0"
+  },
+  "dependencies": {
+    "node-fetch": "^2.7.0"
+  }
+}

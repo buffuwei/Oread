@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Obsidian Read Later - 设置</title>
+  <link rel="stylesheet" href="options.css">
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>Obsidian Read Later</h1>
+      <p class="subtitle">配置你的阅读稍后读插件</p>
+    </header>
+    
+    <!-- 状态提示区域 -->
+    <div id="status" class="status" style="display: none;"></div>
+    
+    <!-- 配置表单 -->
+    <form id="configForm">
+      <section class="section">
+        <h2>基本设置</h2>
+        
+        <div class="form-group">
+          <label for="savePath">保存路径 *</label>
+          <input 
+            type="text" 
+            id="savePath" 
+            name="savePath"
+            placeholder="/Users/你的用户名/Documents/Obsidian/MyVault/ReadLater"
+            required
+          >
+          <small class="hint">文章将保存到此文件夹</small>
+        </div>
+      </section>
+      
+      <section class="section">
+        <h2>API 配置</h2>
+        
+        <div class="form-group">
+          <label for="apiProvider">API 提供商 *</label>
+          <select id="apiProvider" name="apiProvider">
+            <option value="openai">OpenAI</option>
+            <option value="claude">Claude</option>
+            <option value="custom">OpenAI 兼容接口（本地/自定义）</option>
+          </select>
+        </div>
+        
+        <div class="form-group">
+          <label for="apiKey">API Key</label>
+          <input 
+            type="password" 
+            id="apiKey" 
+            name="apiKey"
+            placeholder="sk-..."
+          >
+          <small class="hint">本地 LLM 可以留空</small>
+        </div>
+        
+        <!-- 自定义端点（仅在选择 custom 时显示） -->
+        <div class="form-group" id="customEndpointGroup" style="display: none;">
+          <label for="customEndpoint">自定义 API 端点 *</label>
+          <input 
+            type="text" 
+            id="customEndpoint" 
+            name="customEndpoint"
+            placeholder="http://localhost:11434/v1/chat/completions"
+          >
+          <small class="hint">例如：Ollama、LM Studio、vLLM 等</small>
+        </div>
+        
+        <div class="form-group" id="modelNameGroup" style="display: none;">
+          <label for="modelName">模型名称 *</label>
+          <input 
+            type="text" 
+            id="modelName" 
+            name="modelName"
+            placeholder="llama3.2, qwen2.5, gpt-4o-mini"
+          >
+          <small class="hint">指定要使用的模型</small>
+        </div>
+      </section>
+      
+      <section class="section">
+        <h2>功能选项</h2>
+        
+        <div class="form-group checkbox-group">
+          <label>
+            <input 
+              type="checkbox" 
+              id="enablePreview" 
+              name="enablePreview"
+            >
+            <span>启用预览模式</span>
+          </label>
+          <small class="hint">保存前在侧边栏预览和编辑内容</small>
+        </div>
+        
+        <div class="form-group checkbox-group">
+          <label>
+            <input 
+              type="checkbox" 
+              id="localizeImages" 
+              name="localizeImages"
+            >
+            <span>本地化图片</span>
+          </label>
+          <small class="hint">下载图片到 Obsidian 附件文件夹并使用相对路径</small>
+        </div>
+        
+        <div class="form-group" id="attachmentFolderGroup" style="display: none;">
+          <label for="attachmentFolder">附件文件夹</label>
+          <input 
+            type="text" 
+            id="attachmentFolder" 
+            name="attachmentFolder"
+            placeholder="attachments"
+            value="attachments"
+          >
+          <small class="hint">图片保存的文件夹名称（相对于 Vault 根目录）</small>
+        </div>
+        
+        <div class="form-group checkbox-group">
+          <label>
+            <input 
+              type="checkbox" 
+              id="enableTagExtraction" 
+              name="enableTagExtraction"
+            >
+            <span>启用标签提取</span>
+          </label>
+          <small class="hint">使用 LLM 自动从内容中提取关键词作为标签</small>
+        </div>
+        
+        <div class="form-group" id="maxTagsGroup" style="display: none;">
+          <label for="maxTags">最大标签数量</label>
+          <input 
+            type="number" 
+            id="maxTags" 
+            name="maxTags"
+            placeholder="5"
+            value="5"
+            min="1"
+            max="10"
+          >
+          <small class="hint">从内容中提取的最大标签数量（1-10）</small>
+        </div>
+      </section>
+      
+      <div class="actions">
+        <button type="button" id="saveSettings" class="btn btn-primary">
+          保存设置
+        </button>
+      </div>
+    </form>
+  </div>
+  
+  <script src="../services/storage-manager.js"></script>
+  <script src="options.js"></script>
+</body>
+</html>

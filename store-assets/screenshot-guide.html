@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Screenshot Guide - Obsidian Read Later</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 40px 20px;
+            background: #f5f5f5;
+            color: #333;
+        }
+        
+        h1 {
+            color: #7c3aed;
+            border-bottom: 3px solid #7c3aed;
+            padding-bottom: 10px;
+        }
+        
+        .screenshot-section {
+            background: white;
+            border-radius: 8px;
+            padding: 30px;
+            margin: 30px 0;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        
+        .screenshot-section h2 {
+            color: #7c3aed;
+            margin-top: 0;
+        }
+        
+        .instructions {
+            background: #f0f0f0;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 15px 0;
+        }
+        
+        .instructions h3 {
+            margin-top: 0;
+            color: #555;
+        }
+        
+        .checklist {
+            list-style: none;
+            padding: 0;
+        }
+        
+        .checklist li {
+            padding: 8px 0;
+            padding-left: 30px;
+            position: relative;
+        }
+        
+        .checklist li:before {
+            content: "☐";
+            position: absolute;
+            left: 0;
+            font-size: 20px;
+            color: #7c3aed;
+        }
+        
+        .tip {
+            background: #e8f5e9;
+            border-left: 4px solid #4caf50;
+            padding: 15px;
+            margin: 15px 0;
+        }
+        
+        .warning {
+            background: #fff3e0;
+            border-left: 4px solid #ff9800;
+            padding: 15px;
+            margin: 15px 0;
+        }
+        
+        code {
+            background: #f5f5f5;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-family: 'Monaco', 'Courier New', monospace;
+        }
+        
+        .dimensions {
+            display: inline-block;
+            background: #7c3aed;
+            color: white;
+            padding: 5px 10px;
+            border-radius: 4px;
+            font-weight: bold;
+            margin: 5px 0;
+        }
+    </style>
+</head>
+<body>
+    <h1>📸 Screenshot Capture Guide</h1>
+    
+    <div class="screenshot-section">
+        <h2>🎯 Screenshot 1: Configuration Interface</h2>
+        <div class="dimensions">1280x800 or 640x400</div>
+        
+        <div class="instructions">
+            <h3>What to Capture:</h3>
+            <ul class="checklist">
+                <li>Open the extension popup (click extension icon)</li>
+                <li>Show all configuration fields filled in</li>
+                <li>Highlight the LLM provider dropdown</li>
+                <li>Show "Enable Preview" checkbox</li>
+                <li>Include the "Save Settings" button</li>
+            </ul>
+        </div>
+        
+        <div class="tip">
+            <strong>💡 Tip:</strong> Use sample data like:
+            <ul>
+                <li>Vault Path: <code>/Users/username/Documents/ObsidianVault</code></li>
+                <li>Save Folder: <code>ReadLater</code></li>
+                <li>API Provider: <code>OpenAI</code></li>
+                <li>Model: <code>gpt-4</code></li>
+            </ul>
+        </div>
+        
+        <div class="warning">
+            <strong>⚠️ Warning:</strong> Blur or hide your actual API key in the screenshot!
+        </div>
+    </div>
+    
+    <div class="screenshot-section">
+        <h2>💾 Screenshot 2: Save Flow</h2>
+        <div class="dimensions">1280x800 or 640x400</div>
+        
+        <div class="instructions">
+            <h3>What to Capture:</h3>
+            <ul class="checklist">
+                <li>Open popup on an article page</li>
+                <li>Show "Save Current Page" button prominently</li>
+                <li>Capture status message (e.g., "正在生成摘要...")</li>
+                <li>Show the progress indicator if visible</li>
+                <li>Include part of the webpage in background</li>
+            </ul>
+        </div>
+        
+        <div class="tip">
+            <strong>💡 Tip:</strong> Use a well-known article site (Medium, Dev.to, etc.) as the background to show real-world usage.
+        </div>
+    </div>
+    
+    <div class="screenshot-section">
+        <h2>👁️ Screenshot 3: Preview Feature</h2>
+        <div class="dimensions">1280x800 or 640x400</div>
+        
+        <div class="instructions">
+            <h3>What to Capture:</h3>
+            <ul class="checklist">
+                <li>Open Side Panel with preview content</li>
+                <li>Show the AI-generated summary section</li>
+                <li>Display the editable text area with content</li>
+                <li>Include "Save to Obsidian" and "Cancel" buttons</li>
+                <li>Show character count if visible</li>
+            </ul>
+        </div>
+        
+        <div class="tip">
+            <strong>💡 Tip:</strong> Use a sample article with a clear, well-formatted summary to demonstrate the AI capability.
+        </div>
+    </div>
+    
+    <div class="screenshot-section">
+        <h2>🤖 Screenshot 4: Multiple LLM Support</h2>
+        <div class="dimensions">1280x800 or 640x400</div>
+        
+        <div class="instructions">
+            <h3>What to Capture:</h3>
+            <ul class="checklist">
+                <li>Show configuration with "Custom (OpenAI Compatible)" selected</li>
+                <li>Display custom endpoint field with local LLM URL (e.g., <code>http://localhost:11434/v1/chat/completions</code>)</li>
+                <li>Show model name field with local model (e.g., <code>llama3.2</code>)</li>
+                <li>Optionally show API key field empty (for local LLMs)</li>
+            </ul>
+        </div>
+        
+        <div class="tip">
+            <strong>💡 Tip:</strong> This screenshot demonstrates the flexibility of supporting local LLMs like Ollama, which is a key differentiator.
+        </div>
+    </div>
+    
+    <div class="screenshot-section">
+        <h2>📝 Screenshot 5: Generated Markdown</h2>
+        <div class="dimensions">1280x800 or 640x400</div>
+        
+        <div class="instructions">
+            <h3>What to Capture:</h3>
+            <ul class="checklist">
+                <li>Open Obsidian with a saved article</li>
+                <li>Show the YAML frontmatter clearly</li>
+                <li>Display the AI summary section</li>
+                <li>Show formatted content with headings</li>
+                <li>Include images section if present</li>
+            </ul>
+        </div>
+        
+        <div class="tip">
+            <strong>💡 Tip:</strong> Use Obsidian's reading view to show the rendered Markdown, which looks more polished than edit mode.
+        </div>
+    </div>
+    
+    <div class="screenshot-section">
+        <h2>🛠️ Technical Setup</h2>
+        
+        <h3>Method 1: Browser DevTools (Recommended)</h3>
+        <ol>
+            <li>Open Chrome DevTools (F12 or Cmd+Option+I)</li>
+            <li>Click the device toolbar icon (Cmd+Shift+M)</li>
+            <li>Set dimensions to 1280x800 or 640x400</li>
+            <li>Use browser's screenshot feature or external tool</li>
+        </ol>
+        
+        <h3>Method 2: macOS Screenshot</h3>
+        <ol>
+            <li>Press Cmd+Shift+4</li>
+            <li>Press Space to capture window</li>
+            <li>Click on the browser window</li>
+            <li>Crop to exact dimensions in Preview</li>
+        </ol>
+        
+        <h3>Method 3: Screenshot Extension</h3>
+        <ol>
+            <li>Install a screenshot extension (e.g., Awesome Screenshot)</li>
+            <li>Capture visible area or full page</li>
+            <li>Crop to required dimensions</li>
+        </ol>
+        
+        <div class="warning">
+            <strong>⚠️ Important:</strong>
+            <ul>
+                <li>Save as PNG format (not JPEG)</li>
+                <li>Keep file size under 5MB</li>
+                <li>Ensure high resolution (no pixelation)</li>
+                <li>Remove any personal/sensitive information</li>
+            </ul>
+        </div>
+    </div>
+    
+    <div class="screenshot-section">
+        <h2>✅ Final Checklist</h2>
+        <ul class="checklist">
+            <li>All 5 screenshots captured</li>
+            <li>Correct dimensions (1280x800 or 640x400)</li>
+            <li>PNG format, under 5MB each</li>
+            <li>No sensitive information visible</li>
+            <li>Text is clear and readable</li>
+            <li>Consistent styling across all screenshots</li>
+            <li>Screenshots show actual extension UI (not mockups)</li>
+            <li>Each screenshot tells a clear story</li>
+        </ul>
+    </div>
+</body>
+</html>

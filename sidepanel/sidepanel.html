@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>内容预览 - Obsidian Read Later</title>
+  <link rel="stylesheet" href="sidepanel.css">
+</head>
+<body>
+  <div class="container">
+    <!-- 工具栏 -->
+    <div class="toolbar">
+      <div class="toolbar-left">
+        <h2>内容预览</h2>
+      </div>
+      <div class="toolbar-right">
+        <button id="toggleView" class="btn-icon" title="切换视图">
+          <span id="viewModeText">源码编辑</span>
+        </button>
+        <div class="stats">
+          <span id="charCount">0</span> 字符
+        </div>
+      </div>
+    </div>
+
+    <!-- 状态提示 -->
+    <div id="status" class="status" style="display: none;"></div>
+
+    <!-- 预览/编辑区域 -->
+    <div class="content-area">
+      <!-- Markdown 渲染视图 -->
+      <div id="renderView" class="render-view">
+        <div id="renderedContent" class="rendered-content"></div>
+      </div>
+
+      <!-- 源码编辑视图 -->
+      <div id="editView" class="edit-view" style="display: none;">
+        <textarea id="markdownEditor" class="markdown-editor"></textarea>
+      </div>
+    </div>
+
+    <!-- 操作按钮 -->
+    <div class="action-bar">
+      <button id="cancelBtn" class="btn btn-secondary">
+        取消
+      </button>
+      <button id="saveBtn" class="btn btn-primary">
+        保存到 Obsidian
+      </button>
+    </div>
+  </div>
+
+  <script src="../libs/marked.min.js"></script>
+  <script src="sidepanel.js"></script>
+</body>
+</html>

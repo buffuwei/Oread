@@ -1,0 +1,31 @@
+node_modules/
+libs/Readability.js
+libs/marked.min.js
+*.log
+.DS_Store
+*.zip
+dist/
+.vscode/
+.idea/
+__tests__/
+jest.config.js
+test-*.js
+
+# Kiro IDE 配置
+.kiro/
+
+# 临时输出文件
+output/
+
+# 环境变量和配置
+.env
+.env.local
+.env.*.local
+
+# 用户特定配置
+config.local.js
+
+# Chrome 扩展打包文件
+*.crx
+*.pem
+
