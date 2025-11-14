@@ -1,6 +1,4 @@
 node_modules/
-libs/Readability.js
-libs/marked.min.js
 *.log
 .DS_Store
 *.zip

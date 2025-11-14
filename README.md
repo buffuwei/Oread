@@ -27,13 +27,7 @@
    npm install
    ```
 
-3. **下载必需的库文件**
-   ```bash
-   npm run download-libs
-   ```
-   这会自动下载 Readability.js 和 Marked.js 库。
-
-4. **生成图标（可选）**
+3. **生成图标（可选）**
    
    如果需要自定义图标，可以运行：
    ```bash
@@ -44,7 +38,7 @@
    python generate-icons.py
    ```
 
-5. **在 Chrome 中加载插件**
+4. **在 Chrome 中加载插件**
    - 打开 Chrome 浏览器
    - 访问 `chrome://extensions/`
    - 在右上角启用"开发者模式"
