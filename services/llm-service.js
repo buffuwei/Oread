@@ -8,10 +8,37 @@
  */
 class LLMService {
   constructor(config) {
-    this.provider = config.apiProvider || 'openai';
-    this.apiKey = config.apiKey || '';
-    this.customEndpoint = config.customEndpoint || '';
-    this.modelName = config.modelName || '';
+    // 支持直接传入 LLM 配置对象或完整配置对象
+    if (config.provider) {
+      // 直接传入的 LLM 配置
+      this.provider = config.provider;
+      this.apiKey = config.apiKey || '';
+      this.azureEndpoint = config.azureEndpoint || '';
+      this.azureDeployment = config.azureDeployment || '';
+      this.customEndpoint = config.customEndpoint || '';
+      this.modelName = config.modelName || '';
+    } else {
+      // 兼容旧版本配置
+      this.provider = config.apiProvider || 'openai';
+      this.apiKey = config.apiKey || '';
+      this.azureEndpoint = config.azureEndpoint || '';
+      this.azureDeployment = config.azureDeployment || '';
+      this.customEndpoint = config.customEndpoint || '';
+      this.modelName = config.modelName || '';
+    }
+  }
+  
+  /**
+   * 从完整配置创建 LLMService 实例
+   * @param {Object} fullConfig - 完整配置对象
+   * @returns {LLMService} LLMService 实例
+   */
+  static fromConfig(fullConfig) {
+    const llmConfig = StorageManager.getActiveLlm(fullConfig);
+    if (!llmConfig) {
+      throw new Error('未找到可用的 LLM 配置');
+    }
+    return new LLMService(llmConfig);
   }
 
   /**
@@ -55,6 +82,18 @@ class LLMService {
       throw new Error('请配置 OpenAI API Key');
     }
     
+    if (this.provider === 'azure') {
+      if (!this.apiKey) {
+        throw new Error('请配置 Azure OpenAI API Key');
+      }
+      if (!this.azureEndpoint) {
+        throw new Error('请配置 Azure 端点');
+      }
+      if (!this.azureDeployment) {
+        throw new Error('请配置部署名称');
+      }
+    }
+    
     if (this.provider === 'claude' && !this.apiKey) {
       throw new Error('请配置 Claude API Key');
     }
@@ -77,6 +116,8 @@ class LLMService {
     switch (this.provider) {
       case 'openai':
         return new OpenAIProvider(this.apiKey);
+      case 'azure':
+        return new AzureOpenAIProvider(this.apiKey, this.azureEndpoint, this.azureDeployment);
       case 'claude':
         return new ClaudeProvider(this.apiKey);
       case 'custom':
@@ -242,6 +283,131 @@ class OpenAIProvider extends BaseProvider {
       if (!response.ok) {
         const error = await response.json().catch(() => ({}));
         throw new Error(`OpenAI API 调用失败: ${error.error?.message || response.statusText}`);
+      }
+
+      const data = await response.json();
+      const tagsText = data.choices[0].message.content;
+      
+      // 解析标签
+      return this.parseTags(tagsText, maxTags);
+    } catch (error) {
+      if (error.message.includes('fetch')) {
+        throw new Error('网络错误，请检查网络连接');
+      }
+      throw error;
+    }
+  }
+
+  /**
+   * 解析标签文本
+   * @param {string} tagsText - LLM 返回的标签文本
+   * @param {number} maxTags - 最大标签数量
+   * @returns {string[]} 标签数组
+   */
+  parseTags(tagsText, maxTags) {
+    // 分割标签（支持逗号、分号、换行等分隔符）
+    const tags = tagsText
+      .split(/[,，;；\n]/)
+      .map(tag => tag.trim())
+      .filter(tag => tag.length > 0 && tag.length <= 30) // 过滤空标签和过长标签
+      .slice(0, maxTags); // 限制数量
+    
+    return tags;
+  }
+}
+
+/**
+ * Azure OpenAI Provider
+ */
+class AzureOpenAIProvider extends BaseProvider {
+  constructor(apiKey, azureEndpoint, azureDeployment) {
+    super();
+    this.apiKey = apiKey;
+    this.azureEndpoint = azureEndpoint;
+    this.azureDeployment = azureDeployment;
+    // Azure OpenAI API 版本
+    this.apiVersion = '2024-02-15-preview';
+  }
+
+  /**
+   * 构建 Azure OpenAI 端点 URL
+   */
+  getEndpoint() {
+    // 移除末尾的斜杠
+    const baseUrl = this.azureEndpoint.replace(/\/$/, '');
+    return `${baseUrl}/openai/deployments/${this.azureDeployment}/chat/completions?api-version=${this.apiVersion}`;
+  }
+
+  async generateSummary(content) {
+    const requestBody = {
+      messages: [
+        {
+          role: 'system',
+          content: this.getSystemPrompt()
+        },
+        {
+          role: 'user',
+          content: this.getUserMessage(content)
+        }
+      ],
+      temperature: 0.7,
+      max_tokens: 1000
+    };
+
+    try {
+      const response = await fetch(this.getEndpoint(), {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'api-key': this.apiKey
+        },
+        body: JSON.stringify(requestBody)
+      });
+
+      if (!response.ok) {
+        const error = await response.json().catch(() => ({}));
+        throw new Error(`Azure OpenAI API 调用失败: ${error.error?.message || response.statusText}`);
+      }
+
+      const data = await response.json();
+      return data.choices[0].message.content;
+    } catch (error) {
+      if (error.message.includes('fetch')) {
+        throw new Error('网络错误，请检查网络连接');
+      }
+      throw error;
+    }
+  }
+
+  async extractTags(content, maxTags = 5) {
+    const requestBody = {
+      messages: [
+        {
+          role: 'system',
+          content: this.getTagExtractionPrompt()
+        },
+        {
+          role: 'user',
+          content: this.getTagExtractionMessage(content, maxTags)
+        }
+      ],
+      temperature: 0.3,
+      max_tokens: 100
+    };
+
+    try {
+      const response = await fetch(this.getEndpoint(), {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'api-key': this.apiKey
+        },
+        body: JSON.stringify(requestBody)
+      });
+
+      if (!response.ok) {
+        const error = await response.json().catch(() => ({}));
+        throw new Error(`Azure OpenAI API 调用失败: ${error.error?.message || response.statusText}`);
       }
 
       const data = await response.json();
@@ -539,5 +705,5 @@ class CustomProvider extends BaseProvider {
 
 // 导出
 if (typeof module !== 'undefined' && module.exports) {
-  module.exports = { LLMService, OpenAIProvider, ClaudeProvider, CustomProvider };
+  module.exports = { LLMService, OpenAIProvider, AzureOpenAIProvider, ClaudeProvider, CustomProvider };
 }

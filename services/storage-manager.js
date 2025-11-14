@@ -8,15 +8,18 @@ class StorageManager {
    */
   static DEFAULT_CONFIG = {
     savePath: '',
-    apiProvider: 'openai',
-    apiKey: '',
-    customEndpoint: '',
-    modelName: '',
+    llms: [], // LLM 配置列表
+    activeLlmId: null, // 当前激活的 LLM ID
     enablePreview: false,
     localizeImages: false,
     attachmentFolder: 'attachments',
     enableTagExtraction: false,
-    maxTags: 5
+    maxTags: 5,
+    // 兼容旧版本配置
+    apiProvider: 'openai',
+    apiKey: '',
+    customEndpoint: '',
+    modelName: ''
   };
 
   /**
@@ -25,6 +28,7 @@ class StorageManager {
   static REQUIRED_FIELDS = {
     common: ['savePath'],
     openai: ['apiKey'],
+    azure: ['apiKey', 'azureEndpoint', 'azureDeployment'],
     claude: ['apiKey'],
     custom: ['customEndpoint', 'modelName']
   };
@@ -73,18 +77,25 @@ class StorageManager {
       }
     }
 
-    // 根据 API 提供商检查特定必填项
-    const provider = config.apiProvider || 'openai';
-    const providerFields = this.REQUIRED_FIELDS[provider] || [];
-    
-    for (const field of providerFields) {
-      // 对于 custom 提供商，API Key 是可选的
-      if (provider === 'custom' && field === 'apiKey') {
-        continue;
-      }
+    // 检查是否配置了 LLM
+    if (!config.llms || config.llms.length === 0) {
+      // 兼容旧版本：检查旧的 API 配置
+      const provider = config.apiProvider || 'openai';
+      const providerFields = this.REQUIRED_FIELDS[provider] || [];
       
-      if (!config[field] || config[field].trim() === '') {
-        missing.push(this.getFieldLabel(field));
+      for (const field of providerFields) {
+        if (provider === 'custom' && field === 'apiKey') {
+          continue;
+        }
+        
+        if (!config[field] || config[field].trim() === '') {
+          missing.push(this.getFieldLabel(field));
+        }
+      }
+    } else {
+      // 新版本：检查是否选择了激活的 LLM
+      if (!config.activeLlmId) {
+        missing.push('请选择要使用的 LLM');
       }
     }
 
@@ -92,6 +103,42 @@ class StorageManager {
       valid: missing.length === 0,
       missing: missing
     };
+  }
+  
+  /**
+   * 获取当前激活的 LLM 配置
+   * @param {Object} config - 完整配置对象
+   * @returns {Object|null} LLM 配置对象或 null
+   */
+  static getActiveLlm(config) {
+    // 如果有新版本的 LLM 配置
+    if (config.llms && config.llms.length > 0 && config.activeLlmId) {
+      const llm = config.llms.find(l => l.id === config.activeLlmId);
+      if (llm) {
+        return {
+          provider: llm.provider,
+          apiKey: llm.apiKey,
+          azureEndpoint: llm.azureEndpoint,
+          azureDeployment: llm.azureDeployment,
+          customEndpoint: llm.customEndpoint,
+          modelName: llm.modelName
+        };
+      }
+    }
+    
+    // 兼容旧版本配置
+    if (config.apiProvider) {
+      return {
+        provider: config.apiProvider,
+        apiKey: config.apiKey,
+        azureEndpoint: config.azureEndpoint,
+        azureDeployment: config.azureDeployment,
+        customEndpoint: config.customEndpoint,
+        modelName: config.modelName
+      };
+    }
+    
+    return null;
   }
 
   /**

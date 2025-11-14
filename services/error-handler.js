@@ -159,9 +159,7 @@ class ErrorHandler {
   static logError(error, context, errorInfo) {
     const timestamp = new Date().toISOString();
     const logMessage = `[${timestamp}] [${context}] [${errorInfo.type}] [${errorInfo.severity}]`;
-    
-    console.error(logMessage, error);
-    
+        
     // 如果是严重错误，可以考虑发送错误报告
     if (errorInfo.severity === this.SEVERITY.CRITICAL) {
       this.reportError(error, context, errorInfo);

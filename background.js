@@ -105,8 +105,8 @@ class BackgroundController {
       // 获取配置
       const config = await StorageManager.getConfig();
       
-      // 创建 LLM 服务实例
-      const llmService = new LLMService(config);
+      // 创建 LLM 服务实例（使用新的 fromConfig 方法）
+      const llmService = LLMService.fromConfig(config);
       
       // 生成摘要
       const summary = await llmService.generateSummary(content);
@@ -129,8 +129,8 @@ class BackgroundController {
       // 获取配置
       const config = await StorageManager.getConfig();
       
-      // 创建 LLM 服务实例
-      const llmService = new LLMService(config);
+      // 创建 LLM 服务实例（使用新的 fromConfig 方法）
+      const llmService = LLMService.fromConfig(config);
       
       // 提取标签
       const tags = await llmService.extractTags(content, maxTags);
