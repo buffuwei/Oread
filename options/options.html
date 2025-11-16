@@ -13,9 +13,6 @@
       <p class="subtitle">配置你的阅读稍后读插件</p>
     </header>
     
-    <!-- 状态提示区域 -->
-    <div id="status" class="status" style="display: none;"></div>
-    
     <!-- 配置表单 -->
     <form id="configForm">
       <section class="section">
@@ -63,6 +60,9 @@
           </div>
           
           <div class="modal-body">
+            <!-- 模态框内的状态提示 -->
+            <div id="modalStatus" class="status" style="display: none;"></div>
+            
             <div class="form-group">
               <label for="llmName">配置名称 *</label>
               <input 
@@ -135,6 +135,8 @@
           </div>
           
           <div class="modal-footer">
+            <button type="button" id="testLlm" class="btn btn-test">🧪 测试连接</button>
+            <div style="flex: 1;"></div>
             <button type="button" id="cancelLlm" class="btn btn-secondary">取消</button>
             <button type="button" id="saveLlm" class="btn btn-primary">保存</button>
           </div>
@@ -208,6 +210,9 @@
       </section>
       
       <div class="actions">
+        <!-- 状态提示区域 -->
+        <div id="status" class="status" style="display: none;"></div>
+        
         <button type="button" id="saveSettings" class="btn btn-primary">
           保存设置
         </button>
@@ -216,6 +221,7 @@
   </div>
   
   <script src="../services/storage-manager.js"></script>
+  <script src="../services/llm-service.js"></script>
   <script src="options.js"></script>
 </body>
 </html>

@@ -21,6 +21,7 @@ const elements = {
   // 模态框元素
   llmModal: document.getElementById('llmModal'),
   modalTitle: document.getElementById('modalTitle'),
+  modalStatus: document.getElementById('modalStatus'),
   llmName: document.getElementById('llmName'),
   llmProvider: document.getElementById('llmProvider'),
   llmApiKey: document.getElementById('llmApiKey'),
@@ -32,6 +33,7 @@ const elements = {
   llmAzureDeploymentGroup: document.getElementById('llmAzureDeploymentGroup'),
   llmCustomEndpointGroup: document.getElementById('llmCustomEndpointGroup'),
   llmModelNameGroup: document.getElementById('llmModelNameGroup'),
+  testLlm: document.getElementById('testLlm'),
   saveLlm: document.getElementById('saveLlm'),
   cancelLlm: document.getElementById('cancelLlm'),
   closeModal: document.getElementById('closeModal')
@@ -53,18 +55,19 @@ async function init() {
       const folder = config.saveFolder || 'ReadLater';
       savePath = `${config.vaultPath}/${folder}`;
     }
-    elements.savePath.value = savePath;
-    elements.enablePreview.checked = config.enablePreview || false;
-    elements.localizeImages.checked = config.localizeImages || false;
-    elements.attachmentFolder.value = config.attachmentFolder || 'attachments';
-    elements.enableTagExtraction.checked = config.enableTagExtraction || false;
-    elements.maxTags.value = config.maxTags || 5;
+    
+    if (elements.savePath) elements.savePath.value = savePath;
+    if (elements.enablePreview) elements.enablePreview.checked = config.enablePreview || false;
+    if (elements.localizeImages) elements.localizeImages.checked = config.localizeImages || false;
+    if (elements.attachmentFolder) elements.attachmentFolder.value = config.attachmentFolder || 'attachments';
+    if (elements.enableTagExtraction) elements.enableTagExtraction.checked = config.enableTagExtraction || false;
+    if (elements.maxTags) elements.maxTags.value = config.maxTags || 5;
     
     // 加载 LLM 配置列表
     await loadLlmList();
     
     // 设置当前激活的 LLM
-    if (config.activeLlmId) {
+    if (config.activeLlmId && elements.activeLlmId) {
       elements.activeLlmId.value = config.activeLlmId;
     }
     
@@ -72,6 +75,7 @@ async function init() {
     toggleAttachmentFolder(config.localizeImages);
     toggleMaxTags(config.enableTagExtraction);
   } catch (error) {
+    console.error('初始化失败:', error);
     showStatus('加载配置失败: ' + error.message, 'error');
   }
 }
@@ -85,28 +89,35 @@ async function loadLlmList() {
     const llms = config.llms || [];
     
     // 更新下拉选择框
-    elements.activeLlmId.innerHTML = llms.length === 0 
-      ? '<option value="">请先添加 LLM 配置</option>'
-      : llms.map(llm => `<option value="${llm.id}">${llm.name}</option>`).join('');
+    if (elements.activeLlmId) {
+      elements.activeLlmId.innerHTML = llms.length === 0 
+        ? '<option value="">请先添加 LLM 配置</option>'
+        : llms.map(llm => `<option value="${llm.id}">${llm.name}</option>`).join('');
+    }
     
     // 更新 LLM 列表
-    if (llms.length === 0) {
-      elements.llmList.innerHTML = `
-        <div class="empty-state">
-          <div class="empty-state-icon">🤖</div>
-          <div class="empty-state-text">还没有配置 LLM，点击下方按钮添加</div>
-        </div>
-      `;
-    } else {
-      elements.llmList.innerHTML = llms.map(llm => createLlmItem(llm)).join('');
-      
-      // 绑定编辑和删除事件
-      llms.forEach(llm => {
-        document.getElementById(`edit-${llm.id}`).addEventListener('click', () => editLlm(llm.id));
-        document.getElementById(`delete-${llm.id}`).addEventListener('click', () => deleteLlm(llm.id));
-      });
+    if (elements.llmList) {
+      if (llms.length === 0) {
+        elements.llmList.innerHTML = `
+          <div class="empty-state">
+            <div class="empty-state-icon">🤖</div>
+            <div class="empty-state-text">还没有配置 LLM，点击下方按钮添加</div>
+          </div>
+        `;
+      } else {
+        elements.llmList.innerHTML = llms.map(llm => createLlmItem(llm)).join('');
+        
+        // 绑定编辑和删除事件
+        llms.forEach(llm => {
+          const editBtn = document.getElementById(`edit-${llm.id}`);
+          const deleteBtn = document.getElementById(`delete-${llm.id}`);
+          if (editBtn) editBtn.addEventListener('click', () => editLlm(llm.id));
+          if (deleteBtn) deleteBtn.addEventListener('click', () => deleteLlm(llm.id));
+        });
+      }
     }
   } catch (error) {
+    console.error('加载LLM列表失败:', error);
     showStatus('加载 LLM 列表失败: ' + error.message, 'error');
   }
 }
@@ -147,16 +158,19 @@ function createLlmItem(llm) {
  * 打开添加 LLM 模态框
  */
 function openAddLlmModal() {
+  if (!elements.llmModal) return;
+  
   editingLlmId = null;
-  elements.modalTitle.textContent = '添加 LLM';
-  elements.llmName.value = '';
-  elements.llmProvider.value = 'openai';
-  elements.llmApiKey.value = '';
-  elements.llmAzureEndpoint.value = '';
-  elements.llmAzureDeployment.value = '';
-  elements.llmCustomEndpoint.value = '';
-  elements.llmModelName.value = '';
+  if (elements.modalTitle) elements.modalTitle.textContent = '添加 LLM';
+  if (elements.llmName) elements.llmName.value = '';
+  if (elements.llmProvider) elements.llmProvider.value = 'openai';
+  if (elements.llmApiKey) elements.llmApiKey.value = '';
+  if (elements.llmAzureEndpoint) elements.llmAzureEndpoint.value = '';
+  if (elements.llmAzureDeployment) elements.llmAzureDeployment.value = '';
+  if (elements.llmCustomEndpoint) elements.llmCustomEndpoint.value = '';
+  if (elements.llmModelName) elements.llmModelName.value = '';
   toggleLlmCustomFields('openai');
+  hideModalStatus();
   elements.llmModal.style.display = 'flex';
 }
 
@@ -174,16 +188,17 @@ async function editLlm(llmId) {
     }
     
     editingLlmId = llmId;
-    elements.modalTitle.textContent = '编辑 LLM';
-    elements.llmName.value = llm.name;
-    elements.llmProvider.value = llm.provider;
-    elements.llmApiKey.value = llm.apiKey || '';
-    elements.llmAzureEndpoint.value = llm.azureEndpoint || '';
-    elements.llmAzureDeployment.value = llm.azureDeployment || '';
-    elements.llmCustomEndpoint.value = llm.customEndpoint || '';
-    elements.llmModelName.value = llm.modelName || '';
+    if (elements.modalTitle) elements.modalTitle.textContent = '编辑 LLM';
+    if (elements.llmName) elements.llmName.value = llm.name;
+    if (elements.llmProvider) elements.llmProvider.value = llm.provider;
+    if (elements.llmApiKey) elements.llmApiKey.value = llm.apiKey || '';
+    if (elements.llmAzureEndpoint) elements.llmAzureEndpoint.value = llm.azureEndpoint || '';
+    if (elements.llmAzureDeployment) elements.llmAzureDeployment.value = llm.azureDeployment || '';
+    if (elements.llmCustomEndpoint) elements.llmCustomEndpoint.value = llm.customEndpoint || '';
+    if (elements.llmModelName) elements.llmModelName.value = llm.modelName || '';
     toggleLlmCustomFields(llm.provider);
-    elements.llmModal.style.display = 'flex';
+    hideModalStatus();
+    if (elements.llmModal) elements.llmModal.style.display = 'flex';
   } catch (error) {
     showStatus('加载 LLM 配置失败: ' + error.message, 'error');
   }
@@ -225,37 +240,37 @@ async function deleteLlm(llmId) {
  */
 async function saveLlmConfig() {
   try {
-    const name = elements.llmName.value.trim();
-    const provider = elements.llmProvider.value;
-    const apiKey = elements.llmApiKey.value.trim();
-    const azureEndpoint = elements.llmAzureEndpoint.value.trim();
-    const azureDeployment = elements.llmAzureDeployment.value.trim();
-    const customEndpoint = elements.llmCustomEndpoint.value.trim();
-    const modelName = elements.llmModelName.value.trim();
+    const name = elements.llmName ? elements.llmName.value.trim() : '';
+    const provider = elements.llmProvider ? elements.llmProvider.value : 'openai';
+    const apiKey = elements.llmApiKey ? elements.llmApiKey.value.trim() : '';
+    const azureEndpoint = elements.llmAzureEndpoint ? elements.llmAzureEndpoint.value.trim() : '';
+    const azureDeployment = elements.llmAzureDeployment ? elements.llmAzureDeployment.value.trim() : '';
+    const customEndpoint = elements.llmCustomEndpoint ? elements.llmCustomEndpoint.value.trim() : '';
+    const modelName = elements.llmModelName ? elements.llmModelName.value.trim() : '';
     
     // 验证
     if (!name) {
-      showStatus('请输入配置名称', 'warning', 3000);
+      showModalStatus('请输入配置名称', 'warning', 3000);
       return;
     }
     
     if (provider === 'azure' && !azureEndpoint) {
-      showStatus('请输入 Azure 端点', 'warning', 3000);
+      showModalStatus('请输入 Azure 端点', 'warning', 3000);
       return;
     }
     
     if (provider === 'azure' && !azureDeployment) {
-      showStatus('请输入部署名称', 'warning', 3000);
+      showModalStatus('请输入部署名称', 'warning', 3000);
       return;
     }
     
     if (provider === 'custom' && !customEndpoint) {
-      showStatus('请输入自定义 API 端点', 'warning', 3000);
+      showModalStatus('请输入自定义 API 端点', 'warning', 3000);
       return;
     }
     
     if (provider === 'custom' && !modelName) {
-      showStatus('请输入模型名称', 'warning', 3000);
+      showModalStatus('请输入模型名称', 'warning', 3000);
       return;
     }
     
@@ -310,7 +325,10 @@ async function saveLlmConfig() {
  * 关闭模态框
  */
 function closeLlmModal() {
-  elements.llmModal.style.display = 'none';
+  if (elements.llmModal) {
+    elements.llmModal.style.display = 'none';
+  }
+  hideModalStatus();
   editingLlmId = null;
 }
 
@@ -319,18 +337,18 @@ function closeLlmModal() {
  */
 function toggleLlmCustomFields(provider) {
   // 隐藏所有特定字段
-  elements.llmAzureEndpointGroup.style.display = 'none';
-  elements.llmAzureDeploymentGroup.style.display = 'none';
-  elements.llmCustomEndpointGroup.style.display = 'none';
-  elements.llmModelNameGroup.style.display = 'none';
+  if (elements.llmAzureEndpointGroup) elements.llmAzureEndpointGroup.style.display = 'none';
+  if (elements.llmAzureDeploymentGroup) elements.llmAzureDeploymentGroup.style.display = 'none';
+  if (elements.llmCustomEndpointGroup) elements.llmCustomEndpointGroup.style.display = 'none';
+  if (elements.llmModelNameGroup) elements.llmModelNameGroup.style.display = 'none';
   
   // 根据提供商显示对应字段
   if (provider === 'azure') {
-    elements.llmAzureEndpointGroup.style.display = 'block';
-    elements.llmAzureDeploymentGroup.style.display = 'block';
+    if (elements.llmAzureEndpointGroup) elements.llmAzureEndpointGroup.style.display = 'block';
+    if (elements.llmAzureDeploymentGroup) elements.llmAzureDeploymentGroup.style.display = 'block';
   } else if (provider === 'custom') {
-    elements.llmCustomEndpointGroup.style.display = 'block';
-    elements.llmModelNameGroup.style.display = 'block';
+    if (elements.llmCustomEndpointGroup) elements.llmCustomEndpointGroup.style.display = 'block';
+    if (elements.llmModelNameGroup) elements.llmModelNameGroup.style.display = 'block';
   }
 }
 
@@ -338,6 +356,8 @@ function toggleLlmCustomFields(provider) {
  * 切换附件文件夹字段的显示/隐藏
  */
 function toggleAttachmentFolder(localizeImages) {
+  if (!elements.attachmentFolderGroup) return;
+  
   if (localizeImages) {
     elements.attachmentFolderGroup.style.display = 'block';
   } else {
@@ -349,6 +369,8 @@ function toggleAttachmentFolder(localizeImages) {
  * 切换最大标签数量字段的显示/隐藏
  */
 function toggleMaxTags(enableTagExtraction) {
+  if (!elements.maxTagsGroup) return;
+  
   if (enableTagExtraction) {
     elements.maxTagsGroup.style.display = 'block';
   } else {
@@ -360,15 +382,46 @@ function toggleMaxTags(enableTagExtraction) {
  * 显示状态消息
  */
 function showStatus(message, type = 'loading', duration = 0) {
+  if (!elements.status) return;
+  
   elements.status.textContent = message;
   elements.status.className = `status ${type}`;
   elements.status.style.display = 'block';
   
   if (duration > 0) {
     setTimeout(() => {
-      elements.status.style.display = 'none';
+      if (elements.status) {
+        elements.status.style.display = 'none';
+      }
     }, duration);
   }
+}
+
+/**
+ * 显示模态框内的状态消息
+ */
+function showModalStatus(message, type = 'loading', duration = 0) {
+  if (!elements.modalStatus) return;
+  
+  elements.modalStatus.textContent = message;
+  elements.modalStatus.className = `status ${type}`;
+  elements.modalStatus.style.display = 'block';
+  
+  if (duration > 0) {
+    setTimeout(() => {
+      if (elements.modalStatus) {
+        elements.modalStatus.style.display = 'none';
+      }
+    }, duration);
+  }
+}
+
+/**
+ * 隐藏模态框内的状态消息
+ */
+function hideModalStatus() {
+  if (!elements.modalStatus) return;
+  elements.modalStatus.style.display = 'none';
 }
 
 /**
@@ -376,13 +429,13 @@ function showStatus(message, type = 'loading', duration = 0) {
  */
 function getFormData() {
   return {
-    savePath: elements.savePath.value.trim(),
-    activeLlmId: elements.activeLlmId.value,
-    enablePreview: elements.enablePreview.checked,
-    localizeImages: elements.localizeImages.checked,
-    attachmentFolder: elements.attachmentFolder.value.trim() || 'attachments',
-    enableTagExtraction: elements.enableTagExtraction.checked,
-    maxTags: parseInt(elements.maxTags.value) || 5
+    savePath: elements.savePath ? elements.savePath.value.trim() : '',
+    activeLlmId: elements.activeLlmId ? elements.activeLlmId.value : null,
+    enablePreview: elements.enablePreview ? elements.enablePreview.checked : false,
+    localizeImages: elements.localizeImages ? elements.localizeImages.checked : false,
+    attachmentFolder: elements.attachmentFolder ? (elements.attachmentFolder.value.trim() || 'attachments') : 'attachments',
+    enableTagExtraction: elements.enableTagExtraction ? elements.enableTagExtraction.checked : false,
+    maxTags: elements.maxTags ? (parseInt(elements.maxTags.value) || 5) : 5
   };
 }
 
@@ -415,32 +468,121 @@ async function handleSaveSettings() {
   }
 }
 
+/**
+ * 测试 LLM 配置
+ */
+async function testLlmConfig() {
+  try {
+    const provider = elements.llmProvider ? elements.llmProvider.value : 'openai';
+    const apiKey = elements.llmApiKey ? elements.llmApiKey.value.trim() : '';
+    const azureEndpoint = elements.llmAzureEndpoint ? elements.llmAzureEndpoint.value.trim() : '';
+    const azureDeployment = elements.llmAzureDeployment ? elements.llmAzureDeployment.value.trim() : '';
+    const customEndpoint = elements.llmCustomEndpoint ? elements.llmCustomEndpoint.value.trim() : '';
+    const modelName = elements.llmModelName ? elements.llmModelName.value.trim() : '';
+    
+    // 基本验证
+    if (provider === 'azure' && !azureEndpoint) {
+      showModalStatus('请输入 Azure 端点', 'warning', 3000);
+      return;
+    }
+    
+    if (provider === 'azure' && !azureDeployment) {
+      showModalStatus('请输入部署名称', 'warning', 3000);
+      return;
+    }
+    
+    if (provider === 'custom' && !customEndpoint) {
+      showModalStatus('请输入自定义 API 端点', 'warning', 3000);
+      return;
+    }
+    
+    if (provider === 'custom' && !modelName) {
+      showModalStatus('请输入模型名称', 'warning', 3000);
+      return;
+    }
+    
+    // 禁用测试按钮
+    if (elements.testLlm) {
+      elements.testLlm.disabled = true;
+      elements.testLlm.textContent = '⏳ 测试中...';
+    }
+    
+    showModalStatus('正在测试 LLM 连接...', 'loading');
+    
+    // 构造测试配置
+    const testConfig = {
+      provider,
+      apiKey,
+      azureEndpoint,
+      azureDeployment,
+      customEndpoint,
+      modelName
+    };
+    
+    // 创建 LLM 服务实例
+    const llmService = new LLMService(testConfig);
+    
+    // 使用简单的测试内容
+    const testContent = {
+      title: '测试文章',
+      content: '这是一篇用于测试 LLM 配置的简短文章。人工智能技术正在快速发展。'
+    };
+    
+    // 调用 LLM 生成摘要
+    const summary = await llmService.generateSummary(testContent);
+    
+    if (summary && summary.length > 0) {
+      showModalStatus('✅ 测试成功！LLM 配置正确，可以正常使用。', 'success', 5000);
+    } else {
+      showModalStatus('⚠️ 测试返回了空结果，请检查配置', 'warning', 5000);
+    }
+  } catch (error) {
+    console.error('LLM 测试失败:', error);
+    showModalStatus(`❌ 测试失败: ${error.message}`, 'error', 5000);
+  } finally {
+    // 恢复测试按钮
+    if (elements.testLlm) {
+      elements.testLlm.disabled = false;
+      elements.testLlm.textContent = '🧪 测试连接';
+    }
+  }
+}
+
 // 事件监听器
-elements.addLlm.addEventListener('click', openAddLlmModal);
-elements.saveLlm.addEventListener('click', saveLlmConfig);
-elements.cancelLlm.addEventListener('click', closeLlmModal);
-elements.closeModal.addEventListener('click', closeLlmModal);
+if (elements.addLlm) elements.addLlm.addEventListener('click', openAddLlmModal);
+if (elements.testLlm) elements.testLlm.addEventListener('click', testLlmConfig);
+if (elements.saveLlm) elements.saveLlm.addEventListener('click', saveLlmConfig);
+if (elements.cancelLlm) elements.cancelLlm.addEventListener('click', closeLlmModal);
+if (elements.closeModal) elements.closeModal.addEventListener('click', closeLlmModal);
 
-elements.llmProvider.addEventListener('change', (e) => {
-  toggleLlmCustomFields(e.target.value);
-});
+if (elements.llmProvider) {
+  elements.llmProvider.addEventListener('change', (e) => {
+    toggleLlmCustomFields(e.target.value);
+  });
+}
 
-elements.localizeImages.addEventListener('change', (e) => {
-  toggleAttachmentFolder(e.target.checked);
-});
+if (elements.localizeImages) {
+  elements.localizeImages.addEventListener('change', (e) => {
+    toggleAttachmentFolder(e.target.checked);
+  });
+}
 
-elements.enableTagExtraction.addEventListener('change', (e) => {
-  toggleMaxTags(e.target.checked);
-});
+if (elements.enableTagExtraction) {
+  elements.enableTagExtraction.addEventListener('change', (e) => {
+    toggleMaxTags(e.target.checked);
+  });
+}
 
-elements.saveSettings.addEventListener('click', handleSaveSettings);
+if (elements.saveSettings) elements.saveSettings.addEventListener('click', handleSaveSettings);
 
 // 点击模态框背景关闭
-elements.llmModal.addEventListener('click', (e) => {
-  if (e.target === elements.llmModal) {
-    closeLlmModal();
-  }
-});
+if (elements.llmModal) {
+  elements.llmModal.addEventListener('click', (e) => {
+    if (e.target === elements.llmModal) {
+      closeLlmModal();
+    }
+  });
+}
 
 // 初始化
 init();

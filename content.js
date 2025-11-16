@@ -10,20 +10,33 @@ class ContentExtractor {
    */
   extractPageContent() {
     try {
+      console.log('[Content] extractPageContent: 开始提取页面内容');
+      
       // 使用 Readability 解析页面
+      console.log('[Content] extractPageContent: 调用 Readability 解析');
       const article = this.parseWithReadability();
       
       if (!article) {
+        console.error('[Content] extractPageContent: Readability 解析返回 null');
         throw new Error('无法提取页面内容');
       }
       
+      console.log('[Content] extractPageContent: Readability 解析成功', { 
+        title: article.title, 
+        contentLength: article.textContent?.length 
+      });
+      
       // 提取图片
+      console.log('[Content] extractPageContent: 开始提取图片');
       const images = this.extractImportantImages();
+      console.log('[Content] extractPageContent: 图片提取完成', { imageCount: images.length });
       
       // 提取元数据
+      console.log('[Content] extractPageContent: 开始提取元数据');
       const metadata = this.extractMetadata();
+      console.log('[Content] extractPageContent: 元数据提取完成', metadata);
       
-      return {
+      const result = {
         title: article.title || document.title,
         content: article.textContent || '',
         html: article.content || '',
@@ -33,7 +46,17 @@ class ContentExtractor {
         publishDate: metadata.publishDate || '',
         excerpt: article.excerpt || ''
       };
+      
+      console.log('[Content] extractPageContent: 内容提取完成', {
+        title: result.title,
+        contentLength: result.content.length,
+        imageCount: result.images.length
+      });
+      
+      return result;
     } catch (error) {
+      console.error('[Content] extractPageContent: 提取失败', error);
+      console.error('[Content] extractPageContent: 错误堆栈', error.stack);
       // 注意：content.js 中无法使用 importScripts，所以直接处理错误
       throw new Error('内容提取失败: ' + error.message);
     }
@@ -201,16 +224,22 @@ if (typeof module !== 'undefined' && module.exports) {
  */
 if (typeof chrome !== 'undefined' && chrome.runtime && chrome.runtime.onMessage) {
   chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+    console.log('[Content] 收到消息:', request);
+    
     if (request.action === 'extractContent') {
       try {
+        console.log('[Content] 开始提取内容');
         const extractor = new ContentExtractor();
         const content = extractor.extractPageContent();
         
+        console.log('[Content] 内容提取成功，发送响应');
         sendResponse({
           success: true,
           data: content
         });
       } catch (error) {
+        console.error('[Content] 内容提取失败:', error);
+        console.error('[Content] 错误堆栈:', error.stack);
         sendResponse({
           success: false,
           error: error.message
@@ -221,4 +250,6 @@ if (typeof chrome !== 'undefined' && chrome.runtime && chrome.runtime.onMessage)
     // 返回 true 表示异步响应
     return true;
   });
+  
+  console.log('[Content] Content script 已加载并监听消息');
 }

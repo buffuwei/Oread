@@ -27,47 +27,72 @@ class BackgroundController {
    */
   async handleSaveArticle(tabId) {
     try {
+      console.log('[Background] 开始处理保存文章请求, tabId:', tabId);
       this.currentTabId = tabId;
       
       // 1. 提取内容
+      console.log('[Background] 步骤1: 开始提取内容');
       this.sendStatusUpdate('extracting', '正在提取内容...');
       const content = await this.extractContent(tabId);
+      console.log('[Background] 步骤1: 内容提取成功', { title: content.title, contentLength: content.content?.length });
       this.currentContent = content;
       
+      // 获取配置
+      console.log('[Background] 获取配置');
+      const config = await StorageManager.getConfig();
+      console.log('[Background] 配置获取成功', { activeLlmId: config.activeLlmId, enablePreview: config.enablePreview });
+      
       // 2. 生成摘要
+      console.log('[Background] 步骤2: 开始生成摘要');
       this.sendStatusUpdate('summarizing', '正在生成摘要...');
       const summary = await this.generateSummary(content);
+      console.log('[Background] 步骤2: 摘要生成成功', { summaryLength: summary?.length });
       
       // 3. 提取标签（如果启用）
       let tags = null;
       if (config.enableTagExtraction) {
+        console.log('[Background] 步骤3: 开始提取标签');
         this.sendStatusUpdate('summarizing', '正在提取标签...');
         tags = await this.extractTags(content, config.maxTags || 5);
+        console.log('[Background] 步骤3: 标签提取完成', { tags });
+      } else {
+        console.log('[Background] 步骤3: 跳过标签提取（未启用）');
       }
       
       // 4. 检查是否需要下载图片
       let imageMapping = null;
       
       if (config.localizeImages && content.images && content.images.length > 0) {
+        console.log('[Background] 步骤4: 开始下载图片', { imageCount: content.images.length });
         this.sendStatusUpdate('summarizing', '正在下载图片...');
         imageMapping = await this.downloadImages(content, config);
+        console.log('[Background] 步骤4: 图片下载完成', { mappingCount: imageMapping ? Object.keys(imageMapping).length : 0 });
         this.imageMapping = imageMapping;
+      } else {
+        console.log('[Background] 步骤4: 跳过图片下载', { localizeImages: config.localizeImages, imageCount: content.images?.length });
       }
       
       // 5. 生成 Markdown
+      console.log('[Background] 步骤5: 开始生成 Markdown');
       const markdown = await this.generateMarkdown(content, summary, imageMapping, tags);
+      console.log('[Background] 步骤5: Markdown 生成成功', { markdownLength: markdown?.length });
       this.currentMarkdown = markdown;
       
       // 6. 检查预览设置
       if (config.enablePreview) {
+        console.log('[Background] 步骤6: 打开预览模式');
         // 打开 Side Panel 显示预览
         await this.showPreview(markdown, content);
       } else {
+        console.log('[Background] 步骤6: 直接保存文件');
         // 直接保存
         await this.saveFile(markdown, content.title);
         this.sendStatusUpdate('success', '保存成功！');
+        console.log('[Background] 文章保存完成');
       }
     } catch (error) {
+      console.error('[Background] 处理保存文章时发生错误:', error);
+      console.error('[Background] 错误堆栈:', error.stack);
       const errorInfo = ErrorHandler.handle(error, 'handleSaveArticle');
       this.sendStatusUpdate('error', errorInfo.message);
     }
@@ -79,17 +104,23 @@ class BackgroundController {
    * @returns {Promise<Object>} 提取的内容
    */
   async extractContent(tabId) {
+    console.log('[Background] extractContent: 发送消息到 content script, tabId:', tabId);
     return new Promise((resolve, reject) => {
       chrome.tabs.sendMessage(tabId, { action: 'extractContent' }, (response) => {
         if (chrome.runtime.lastError) {
+          console.error('[Background] extractContent: chrome.runtime.lastError:', chrome.runtime.lastError);
           reject(new Error('无法连接到页面，请刷新后重试'));
           return;
         }
         
-        if (response.success) {
+        console.log('[Background] extractContent: 收到响应', response);
+        
+        if (response && response.success) {
+          console.log('[Background] extractContent: 内容提取成功');
           resolve(response.data);
         } else {
-          reject(new Error(response.error || '内容提取失败'));
+          console.error('[Background] extractContent: 内容提取失败', response);
+          reject(new Error(response?.error || '内容提取失败'));
         }
       });
     });
@@ -102,17 +133,26 @@ class BackgroundController {
    */
   async generateSummary(content) {
     try {
+      console.log('[Background] generateSummary: 开始生成摘要');
+      
       // 获取配置
       const config = await StorageManager.getConfig();
+      console.log('[Background] generateSummary: 配置获取成功', { activeLlmId: config.activeLlmId });
       
       // 创建 LLM 服务实例（使用新的 fromConfig 方法）
+      console.log('[Background] generateSummary: 创建 LLM 服务实例');
       const llmService = LLMService.fromConfig(config);
+      console.log('[Background] generateSummary: LLM 服务实例创建成功');
       
       // 生成摘要
+      console.log('[Background] generateSummary: 调用 LLM 生成摘要');
       const summary = await llmService.generateSummary(content);
+      console.log('[Background] generateSummary: 摘要生成成功', { summaryLength: summary?.length });
       
       return summary;
     } catch (error) {
+      console.error('[Background] generateSummary: 生成摘要时发生错误:', error);
+      console.error('[Background] generateSummary: 错误堆栈:', error.stack);
       const errorInfo = ErrorHandler.handle(error, 'generateSummary');
       throw new Error(errorInfo.message);
     }
@@ -196,8 +236,17 @@ class BackgroundController {
    * @returns {Promise<string>} Markdown 文本
    */
   async generateMarkdown(content, summary, imageMapping = null, tags = null) {
-    const generator = new MarkdownGenerator();
-    return generator.generate(content, summary, imageMapping, tags);
+    try {
+      console.log('[Background] generateMarkdown: 开始生成 Markdown');
+      const generator = new MarkdownGenerator();
+      const markdown = await generator.generate(content, summary, imageMapping, tags);
+      console.log('[Background] generateMarkdown: Markdown 生成成功');
+      return markdown;
+    } catch (error) {
+      console.error('[Background] generateMarkdown: 生成 Markdown 时发生错误:', error);
+      console.error('[Background] generateMarkdown: 错误堆栈:', error.stack);
+      throw error;
+    }
   }
 
   /**
@@ -242,8 +291,11 @@ class BackgroundController {
    */
   async saveFile(markdown, title) {
     try {
+      console.log('[Background] saveFile: 开始保存文件', { title, markdownLength: markdown?.length });
+      
       // 获取配置
       const config = await StorageManager.getConfig();
+      console.log('[Background] saveFile: 配置获取成功', { savePath: config.savePath });
       
       // 验证配置
       if (!config.savePath) {
@@ -251,35 +303,46 @@ class BackgroundController {
       }
       
       // 生成文件名
+      console.log('[Background] saveFile: 生成文件名');
       const generator = new MarkdownGenerator();
       const filename = generator.generateSafeFilename(title);
+      console.log('[Background] saveFile: 文件名生成成功', { filename });
       
       // 从 savePath 中提取文件夹名称（用于下载路径）
       // savePath 格式：/Users/xxx/Documents/Obsidian/MyVault/ReadLater
       const pathParts = config.savePath.split('/');
       const saveFolder = pathParts[pathParts.length - 1] || 'ReadLater';
       const savePath = `${saveFolder}/${filename}`;
+      console.log('[Background] saveFile: 保存路径', { savePath });
       
       // 创建 Blob
+      console.log('[Background] saveFile: 创建 Blob');
       const blob = new Blob([markdown], { type: 'text/markdown;charset=utf-8' });
       const url = URL.createObjectURL(blob);
+      console.log('[Background] saveFile: Blob URL 创建成功');
       
       // 使用 Chrome Downloads API 下载
+      console.log('[Background] saveFile: 开始下载');
       const downloadId = await chrome.downloads.download({
         url: url,
         filename: savePath,
         saveAs: false,
         conflictAction: 'uniquify'
       });
+      console.log('[Background] saveFile: 下载已启动', { downloadId });
       
       // 等待下载完成
+      console.log('[Background] saveFile: 等待下载完成');
       await this.waitForDownload(downloadId);
+      console.log('[Background] saveFile: 下载完成');
       
       // 清理 Blob URL
       URL.revokeObjectURL(url);
       
-      console.log('文件保存成功:', savePath);
+      console.log('[Background] saveFile: 文件保存成功', { savePath });
     } catch (error) {
+      console.error('[Background] saveFile: 保存文件时发生错误:', error);
+      console.error('[Background] saveFile: 错误堆栈:', error.stack);
       const errorInfo = ErrorHandler.handle(error, 'saveFile');
       throw new Error(errorInfo.message);
     }
